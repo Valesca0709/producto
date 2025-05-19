@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Venta</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+background-color: #f4f7fa;
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+    .venta-container {
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 900px;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .search-container {
+        display: flex;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    .search-container input[type="text"] {
+        flex-grow: 1;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px 0 0 5px;
+    }
+
+    .search-container button {
+        background-color: #4faaf0;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 0 5px 5px 0;
+        cursor: pointer;
+    }
+
+    .search-container button:hover {
+        background-color: #3498db;
+    }
+
+    table {
+        width: 100%; /* O un ancho fijo si lo prefieres, por ejemplo: width: 800px; */
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        table-layout: fixed; /* ¡Esta es la propiedad clave! */
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        /* Opcional: puedes agregar un ancho base para las columnas si lo deseas */
+        /* width: 150px; */
+        overflow: hidden; /* Oculta el contenido que excede el ancho */
+        text-overflow: ellipsis; /* Muestra "..." para indicar contenido oculto */
+        white-space: nowrap; /* Evita que el texto se envuelva */
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    .selection-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .selection-container label {
+        margin-right: 10px;
+        font-weight: bold;
+    }
+
+    .selection-container select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+
+    .selection-container input[type="number"] {
+        width: 100px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-right: 10px;
+    }
+
+    .total {
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .buy-button {
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .buy-button:hover {
+        background-color: #27ae60;
+    }
+</style>
+</head>
+<body>
+<div class="venta-container">
+<h2>Venta de Productos</h2>
+
+    <div class="search-container">
+        <input type="text" id="buscarProducto" placeholder="Buscar por nombre de producto" oninput="filtrarTabla()" />
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Sucursal</th>
+                <th>Producto</th>
+                <th>Precio Unitario</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody id="tablaProductos">
+            </tbody>
+    </table>
+
+    <div class="selection-container">
+        <label for="productoSeleccionado">Producto Seleccionado:</label>
+        <select id="productoSeleccionado">
+            <option value="">Seleccione un producto de la tabla</option>
+        </select>
+        <label for="cantidadComprar">Cantidad a Comprar:</label>
+        <input type="number" id="cantidadComprar" min="1" value="1" />
+        <button onclick="calcularTotal()">Calcular Total</button>
+    </div>
+
+    <div class="total" id="resultadoTotal">Total: -</div>
+
+    <button class="buy-button" onclick="alert('Funcionalidad de compra pendiente')">Comprar</button>
+</div>
+
+<script>
+    let productosSucursalData = []; // Almacenar todos los datos de productos por sucursal
+
+    async function cargarProductosSucursal() {
+        try {
+            const response = await fetch("/api/v1/productoSucursal");
+            if (!response.ok) throw new Error("Error al obtener productos");
+            productosSucursalData = await response.json();
+            mostrarTablaProductos(productosSucursalData);
+            cargarOpcionesSelect(productosSucursalData);
+        } catch (error) {
+            console.error("Error cargando productos:", error);
+            alert("No se pudieron cargar los productos.");
+        }
+    }
+
+    function mostrarTablaProductos(data) {
+        const tablaBody = document.getElementById("tablaProductos");
+        tablaBody.innerHTML = "";
+        data.forEach(ps => {
+            const row = tablaBody.insertRow();
+            row.insertCell().textContent = ps.idProductoSucursal;
+            row.insertCell().textContent = ps.sucursal.nombre;
+            row.insertCell().textContent = ps.producto.nombre;
+            row.insertCell().textContent = `$${ps.precio_unitario.toFixed(2)}`;
+            row.insertCell().textContent = ps.producto.stock;
+            row.addEventListener('click', () => seleccionarProducto(ps.idProductoSucursal));
+            row.style.cursor = 'pointer';
+        });
+    }
+
+    function cargarOpcionesSelect(data) {
+        const selectProducto = document.getElementById("productoSeleccionado");
+        data.forEach(ps => {
+            const option = document.createElement("option");
+            option.value = ps.idProductoSucursal;
+            option.textContent = `${ps.sucursal.nombre} - ${ps.producto.nombre} ($${ps.precio_unitario.toFixed(2)})`;
+            selectProducto.appendChild(option);
+        });
+    }
+
+    function filtrarTabla() {
+        const filtro = document.getElementById("buscarProducto").value.toLowerCase();
+        const resultados = productosSucursalData.filter(ps =>
+            ps.producto.nombre.toLowerCase().includes(filtro) ||
+            ps.sucursal.nombre.toLowerCase().includes(filtro)
+        );
+        mostrarTablaProductos(resultados);
+        cargarOpcionesSelectFiltrados(resultados);
+    }
+
+    function cargarOpcionesSelectFiltrados(data) {
+        const selectProducto = document.getElementById("productoSeleccionado");
+        const currentValue = selectProducto.value;
+        selectProducto.innerHTML = '<option value="">Seleccione un producto de la tabla</option>';
+        data.forEach(ps => {
+            const option = document.createElement("option");
+            option.value = ps.idProductoSucursal;
+            option.textContent = `${ps.sucursal.nombre} - ${ps.producto.nombre} ($${ps.precio_unitario.toFixed(2)})`;
+            selectProducto.appendChild(option);
+        });
+        if (data.some(ps => ps.idProductoSucursal == currentValue)) {
+            selectProducto.value = currentValue;
+        }
+    }
+
+    let productoSeleccionadoId = null;
+    function seleccionarProducto(id) {
+        productoSeleccionadoId = id;
+        document.getElementById("productoSeleccionado").value = id;
+    }
+
+    async function calcularTotal() {
+        const cantidad = document.getElementById("cantidadComprar").value;
+        if (!productoSeleccionadoId) {
+            alert("Por favor, seleccione un producto de la tabla.");
+            return;
+        }
+        if (isNaN(cantidad) || parseInt(cantidad) <= 0) {
+            alert("Por favor, ingrese una cantidad válida.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/v1/productoSucursal/calcular-total?idProductoSucursal=${productoSeleccionadoId}&cantidad=${cantidad}`);
+            if (!response.ok) throw new Error("Error al calcular el total");
+            const total = await response.json();
+            const totalUSD = (total / 900).toFixed(2);
+            document.getElementById("resultadoTotal").textContent = `Total: $${total} | Total USD: $${totalUSD}`;
+        } catch (error) {
+            console.error("Error al calcular el total:", error);
+            alert("Ocurrió un error al calcular el total.");
+        }
+    }
+
+    window.onload = cargarProductosSucursal;
+</script>
+</body>
+</html>
