@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado Transacción</title>
+</head>
+<body>
+    <h1>Resultado de la Transacción</h1>
+
+    <div th:if="${resultado != null}">
+        <p><strong>Estado:</strong> <span th:text="${resultado['status']}">Estado</span></p>
+        <p><strong>Orden de compra:</strong> <span th:text="${resultado['buy_order']}">Orden</span></p>
+        <p><strong>Monto:</strong> <span th:text="${resultado['amount']}">Monto</span></p>
+        <p><strong>Fecha:</strong> <span th:text="${resultado['transaction_date']}">Fecha</span></p>
+    </div>
+
+    <div th:if="${resultado == null}">
+        <p>No se pudo obtener el resultado de la transacción.</p>
+    </div>
+
+    <p><a href="/">Volver al inicio</a></p>
+</body>
+</html>
