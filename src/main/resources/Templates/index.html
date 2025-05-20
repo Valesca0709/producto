@@ -125,7 +125,7 @@ align-items: center;
 </head>
 <body>
 <div class="venta-container">
-<h2>Venta de Productos</h2>
+    <h2>Venta de Productos</h2>
 
     <div class="search-container">
         <input type="text" id="buscarProducto" placeholder="Buscar por nombre de producto" oninput="filtrarTabla()" />
@@ -157,24 +157,32 @@ align-items: center;
 
     <div class="total" id="resultadoTotal">Total: -</div>
 
-    <button class="buy-button" onclick="alert('Funcionalidad de compra pendiente')">Comprar</button>
+    <button onclick="comprarDesdeFormulario()">Comprar</button>
 </div>
 
 <script>
     let productosSucursalData = []; // Almacenar todos los datos de productos por sucursal
 
     async function cargarProductosSucursal() {
-        try {
-            const response = await fetch("/api/v1/productoSucursal");
-            if (!response.ok) throw new Error("Error al obtener productos");
+    try {
+        const response = await fetch("/api/v1/productoSucursal");
+        if (!response.ok) throw new Error("Error al obtener productos");
+
+        let productosSucursalData = [];
+
+        // Evita parsear JSON si la respuesta está vacía (204 No Content)
+        if (response.status !== 204) {
             productosSucursalData = await response.json();
-            mostrarTablaProductos(productosSucursalData);
-            cargarOpcionesSelect(productosSucursalData);
-        } catch (error) {
-            console.error("Error cargando productos:", error);
-            alert("No se pudieron cargar los productos.");
         }
+
+        mostrarTablaProductos(productosSucursalData);
+        cargarOpcionesSelect(productosSucursalData);
+    } catch (error) {
+        console.error("Error cargando productos:", error);
+        alert("No se pudieron cargar los productos.");
     }
+}
+
 
     function mostrarTablaProductos(data) {
         const tablaBody = document.getElementById("tablaProductos");
@@ -253,6 +261,45 @@ align-items: center;
             console.error("Error al calcular el total:", error);
             alert("Ocurrió un error al calcular el total.");
         }
+    }
+
+    async function comprarProducto(idProductoSucursal, cantidad) {
+    try {
+        const params = new URLSearchParams({
+            idProductoSucursal: idProductoSucursal,
+            cantidad: cantidad
+        });
+
+        const response = await fetch(`/pagar?${params.toString()}`);
+        const data = await response.json();
+
+        if (data.url && data.token) {
+            // Redirige automáticamente al formulario de pago de Transbank
+            window.location.href = `${data.url}?token_ws=${data.token}`;
+        } else {
+            alert("Error al iniciar la transacción con Transbank.");
+            console.error("Respuesta:", data);
+        }
+    } catch (error) {
+        console.error("Error en la compra:", error);
+        alert("Hubo un error al procesar la compra.");
+    }
+}
+
+    function comprarDesdeFormulario() {
+        const select = document.getElementById("productoSeleccionado");
+        const cantidadInput = document.getElementById("cantidadComprar");
+
+        const idProductoSucursal = select.value;
+        const cantidad = cantidadInput.value;
+
+        if (!idProductoSucursal || cantidad <= 0) {
+            alert("Seleccione un producto y una cantidad válida.");
+            return;
+        }
+
+        // Llama a tu función original con los valores correctos
+        comprarProducto(idProductoSucursal, cantidad);
     }
 
     window.onload = cargarProductosSucursal;

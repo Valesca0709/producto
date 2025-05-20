@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Compra Rechazada</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #fbe9e7, #ef9a9a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .error-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            width: 400px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .error-container h2 {
+            color: #c62828;
+            margin-bottom: 20px;
+        }
+
+        .error-container p {
+            color: #444;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .redirect-msg {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h2>Compra Rechazada</h2>
+        <p>La transacción no pudo completarse.</p>
+        <p>Le recomendamos contactar con su entidad bancaria para obtener más información.</p>
+        <div class="redirect-msg">
+            Será redirigido al inicio en <span id="countdown">10</span> segundos...
+        </div>
+    </div>
+
+    <script>
+        let segundos = 10;
+        const contador = document.getElementById("countdown");
+        const intervalo = setInterval(() => {
+            segundos--;
+            contador.textContent = segundos;
+            if (segundos <= 0) {
+                clearInterval(intervalo);
+                window.location.href = "/";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
