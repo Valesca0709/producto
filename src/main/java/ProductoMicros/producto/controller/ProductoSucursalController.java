@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import ProductoMicros.producto.model.ProductoSucursal;
 import ProductoMicros.producto.service.ProductoSucursalService;
 
+import org.springframework.web.bind.annotation.ResponseBody;
+
+
 @RestController
 @RequestMapping("/api/v1/productoSucursal")
 public class ProductoSucursalController {
@@ -57,4 +60,17 @@ public class ProductoSucursalController {
             return ResponseEntity.badRequest().body(null);
         }
     }
+
+    @GetMapping("/convertir-usd")
+@ResponseBody
+public String convertirCLPaUSD(@RequestParam double monto) {
+    try {
+        double tasaCambio = productoSucursalService.obtenerTasaUSD();
+        double resultado = monto / tasaCambio;
+        return String.format("%.2f", resultado);
+    } catch (Exception e) {
+        return "Error";
+    }
+}
+
 }

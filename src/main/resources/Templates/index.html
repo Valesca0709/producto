@@ -240,28 +240,33 @@ align-items: center;
         document.getElementById("productoSeleccionado").value = id;
     }
 
-    async function calcularTotal() {
-        const cantidad = document.getElementById("cantidadComprar").value;
-        if (!productoSeleccionadoId) {
-            alert("Por favor, seleccione un producto de la tabla.");
-            return;
-        }
-        if (isNaN(cantidad) || parseInt(cantidad) <= 0) {
-            alert("Por favor, ingrese una cantidad válida.");
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/v1/productoSucursal/calcular-total?idProductoSucursal=${productoSeleccionadoId}&cantidad=${cantidad}`);
-            if (!response.ok) throw new Error("Error al calcular el total");
-            const total = await response.json();
-            const totalUSD = (total / 900).toFixed(2);
-            document.getElementById("resultadoTotal").textContent = `Total: $${total} | Total USD: $${totalUSD}`;
-        } catch (error) {
-            console.error("Error al calcular el total:", error);
-            alert("Ocurrió un error al calcular el total.");
-        }
+async function calcularTotal() {
+    const cantidad = document.getElementById("cantidadComprar").value;
+    if (!productoSeleccionadoId) {
+        alert("Por favor, seleccione un producto de la tabla.");
+        return;
     }
+    if (isNaN(cantidad) || parseInt(cantidad) <= 0) {
+        alert("Por favor, ingrese una cantidad válida.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/productoSucursal/calcular-total?idProductoSucursal=${productoSeleccionadoId}&cantidad=${cantidad}`);
+        if (!response.ok) throw new Error("Error al calcular el total");
+        const total = await response.json();
+
+        const usdResponse = await fetch(`/api/v1/productoSucursal/convertir-usd?monto=${total}`);
+        if (!usdResponse.ok) throw new Error("Error al convertir a USD");
+        const totalUSD = await usdResponse.text();
+
+        document.getElementById("resultadoTotal").textContent = `Total: $${total} | Total USD: $${totalUSD}`;
+    } catch (error) {
+        console.error("Error al calcular el total:", error);
+        alert("Ocurrió un error al calcular el total.");
+    }
+}
+
 
     async function comprarProducto(idProductoSucursal, cantidad) {
     try {
