@@ -157,7 +157,8 @@ align-items: center;
 
     <div class="total" id="resultadoTotal">Total: -</div>
 
-    <button class="buy-button" onclick="alert('Funcionalidad de compra pendiente')">Comprar</button>
+    <button class="buy-button" onclick="iniciarPago()">Comprar</button>
+
 </div>
 
 <script>
@@ -165,7 +166,7 @@ align-items: center;
 
     async function cargarProductosSucursal() {
         try {
-            const response = await fetch("/api/v1/productoSucursal");
+            const response = await fetch("/api/productoSucursal");
             if (!response.ok) throw new Error("Error al obtener productos");
             productosSucursalData = await response.json();
             mostrarTablaProductos(productosSucursalData);
@@ -254,6 +255,35 @@ align-items: center;
             alert("Ocurrió un error al calcular el total.");
         }
     }
+
+    async function iniciarPago() {
+    const cantidad = document.getElementById("cantidadComprar").value;
+
+    if (!productoSeleccionadoId) {
+        alert("Por favor, seleccione un producto.");
+        return;
+    }
+
+    if (isNaN(cantidad) || parseInt(cantidad) <= 0) {
+        alert("Por favor, ingrese una cantidad válida.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/pagar?idProductoSucursal=${productoSeleccionadoId}&cantidad=${cantidad}`);
+        if (!response.ok) throw new Error("Error al iniciar el pago");
+
+        const result = await response.json();
+        const { token, url } = result;
+
+        // Redirigir al formulario de Webpay
+        window.location.href = `${url}?token_ws=${token}`;
+    } catch (error) {
+        console.error("Error al iniciar el pago:", error);
+        alert("Ocurrió un error al procesar el pago.");
+    }
+}
+
 
     window.onload = cargarProductosSucursal;
 </script>

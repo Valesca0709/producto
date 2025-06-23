@@ -20,7 +20,11 @@ public class ProductoSucursalService {
         return productoSucursalRepository.findByProductoNombreAndProductoIdProducto(nombre, idProducto);
     }
 
-   
+    public List<ProductoSucursal> obtenerProductoSucursal() {
+    return productoSucursalRepository.findAll();
+    }
+
+
     public double calcularTotal(int idProductoSucursal, int cantidad) {
         ProductoSucursal productoSucursal = productoSucursalRepository.findByIdProductoSucursal(idProductoSucursal);
         

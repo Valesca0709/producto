@@ -14,14 +14,14 @@ import ProductoMicros.producto.model.ProductoSucursal;
 import ProductoMicros.producto.service.ProductoSucursalService;
 
 @RestController
-@RequestMapping("/api/v1/productoSucursal")
+@RequestMapping("/api/productoSucursal")
 public class ProductoSucursalController {
     @Autowired
     private ProductoSucursalService productoSucursalService;
 
 
     //Listar sucursal en el que aparece el producto y la sucursal en el que se encuentra el producto
-   @GetMapping
+@GetMapping
     public ResponseEntity<List<ProductoSucursal>> getAllProductosSucursal() {
         List<ProductoSucursal> productos = productoSucursalService.findAll();
         if (productos.isEmpty()) {
