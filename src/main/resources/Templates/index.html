@@ -167,6 +167,11 @@
         <div class="total" id="resultadoTotal">Total: -</div>
 
         <button onclick="comprarDesdeFormulario()">Comprar</button>
+
+        <button id="btnSseConnect">Conectar SSE</button>
+        <button id="btnSseDisconnect">Desconectar SSE</button>
+        <button id="btnSseError">Forzar Error SSE</button>
+        <div id="sseStatus" style="margin:10px 0;font-weight:bold;"></div>
     </div>
 
     <script>
@@ -320,6 +325,45 @@
 
         // Initial load of products when the page loads
         window.onload = cargarProductosSucursal;
+    </script>
+
+    <script>
+        let evtSource = null;
+        const statusDiv = document.getElementById("sseStatus");
+        document.getElementById("btnSseConnect").onclick = function() {
+            if (evtSource) {
+                statusDiv.textContent = "Ya está conectado.";
+                return;
+            }
+            evtSource = new EventSource("http://localhost:8087/sse/stream");
+            statusDiv.textContent = "Conectado a SSE.";
+            evtSource.addEventListener("connected", e => console.log("Conexión:", e.data));
+            evtSource.addEventListener("mensaje", e => console.log("Mensaje:", e.data));
+            evtSource.addEventListener("json", e => console.log("JSON:", e.data));
+            evtSource.addEventListener("error", e => console.log("Error:", e.data));
+            evtSource.addEventListener("performance", e => console.log("Performance:", e.data));
+            evtSource.addEventListener("broadcast", e => console.log("Broadcast:", e.data));
+            evtSource.onerror = (e) => {
+                statusDiv.textContent = "Desconectado (error SSE)";
+                console.log("onerror:", e);
+                evtSource.close();
+                evtSource = null;
+            };
+        };
+        document.getElementById("btnSseDisconnect").onclick = function() {
+            if (evtSource) {
+                evtSource.close();
+                evtSource = null;
+                statusDiv.textContent = "Desconectado manualmente.";
+            } else {
+                statusDiv.textContent = "No está conectado.";
+            }
+        };
+        document.getElementById("btnSseError").onclick = function() {
+            fetch("/sse/error").then(() => {
+                statusDiv.textContent = "Error SSE forzado desde el backend.";
+            });
+        };
     </script>
 </body>
 
