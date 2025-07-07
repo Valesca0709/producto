@@ -1,7 +1,7 @@
 package ProductoMicros.producto.model;
 
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Entity
 @Table(name = "producto")
 public class Producto {
@@ -26,11 +25,13 @@ public class Producto {
     private String nombre;
 
     @Column(nullable = false)
-    private int stock;
-
-    @Column(nullable = false)
     private double precio;
 
     @OneToMany(mappedBy = "producto")
+    @JsonIgnore // Evita recursividad en las respuestas JSON
+    private List<ProductoSucursal> productoSucursales;
+    
+    @OneToMany(mappedBy = "producto")
+    @JsonIgnore
     private List<DetalleVenta> detalleVenta;
 }

@@ -10,6 +10,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore; // ✅ NUEVO: Import necesario
+
 import jakarta.persistence.OneToMany;
 
 @Data
@@ -38,6 +41,9 @@ public class Sucursal {
     @Column(length = 50, nullable = false)
     private String region;
     
+    // ✅ CORRECCIÓN: Se añade @JsonIgnore para romper el bucle de serialización
+    // que impedía que los datos se enviaran correctamente al navegador.
     @OneToMany(mappedBy = "sucursal")
+    @JsonIgnore
     private List<DetalleVenta> detalleVenta;
 }

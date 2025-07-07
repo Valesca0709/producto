@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitor de Eventos SSE</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        .monitor-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            width: 600px;
+            text-align: center;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-disconnect {
+            background-color: #6c757d;
+        }
+        .btn-disconnect:hover {
+            background-color: #5a6268;
+        }
+        .btn-error {
+            background-color: #dc3545;
+        }
+        .btn-error:hover {
+            background-color: #c82333;
+        }
+        #sseStatus {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+        }
+        .log-container {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            text-align: left;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+        .log-container pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="monitor-container">
+        <h2>🛰️ Monitor de Eventos SSE</h2>
+        <div class="controls">
+            <button class="btn" id="btnSseConnect">Conectar</button>
+            <button class="btn btn-disconnect" id="btnSseDisconnect">Desconectar</button>
+            <button class="btn btn-error" id="btnSseError">Forzar Error</button>
+        </div>
+        <div id="sseStatus">Estado: Desconectado</div>
+        <h3>Log de Eventos:</h3>
+        <div class="log-container" id="eventLog"></div>
+        <a href="/" style="display:inline-block; margin-top: 20px;">Volver a la tienda</a>
+    </div>
+
+    <script>
+        let evtSource = null;
+        const statusDiv = document.getElementById("sseStatus");
+        const logDiv = document.getElementById("eventLog");
+
+        function logEvent(type, data) {
+            const now = new Date().toLocaleTimeString();
+            const logEntry = document.createElement("pre");
+            logEntry.textContent = `[${now}] [${type}] - ${data}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+        }
+
+        document.getElementById("btnSseConnect").onclick = function() {
+            if (evtSource) {
+                statusDiv.textContent = "Estado: Ya está conectado.";
+                return;
+            }
+            evtSource = new EventSource("http://localhost:8087/sse/stream");
+            statusDiv.textContent = "Estado: Conectado a SSE.";
+            logEvent("SYSTEM", "Intentando conectar...");
+
+            evtSource.onopen = () => logEvent("SYSTEM", "Conexión abierta.");
+            
+            evtSource.addEventListener("connected", e => logEvent("CONNECTED", e.data));
+            evtSource.addEventListener("mensaje", e => logEvent("MENSAJE", e.data));
+            evtSource.addEventListener("json", e => logEvent("JSON", e.data));
+            evtSource.addEventListener("performance", e => logEvent("PERFORMANCE", e.data));
+            evtSource.addEventListener("broadcast", e => logEvent("BROADCAST", e.data));
+            evtSource.addEventListener("error", e => logEvent("ERROR-EVENT", e.data));
+            
+            evtSource.onerror = (e) => {
+                statusDiv.textContent = "Estado: Desconectado (error SSE)";
+                logEvent("SYSTEM-ERROR", "La conexión SSE se ha cerrado por un error.");
+                console.error("onerror:", e);
+                evtSource.close();
+                evtSource = null;
+            };
+        };
+
+        document.getElementById("btnSseDisconnect").onclick = function() {
+            if (evtSource) {
+                evtSource.close();
+                evtSource = null;
+                statusDiv.textContent = "Estado: Desconectado manualmente.";
+                logEvent("SYSTEM", "Desconectado manualmente por el usuario.");
+            } else {
+                statusDiv.textContent = "Estado: No está conectado.";
+            }
+        };
+
+        document.getElementById("btnSseError").onclick = function() {
+            fetch("/sse/error").then(() => {
+                logEvent("SYSTEM", "Se ha solicitado un error forzado desde el backend.");
+            });
+        };
+    </script>
+</body>
+</html>

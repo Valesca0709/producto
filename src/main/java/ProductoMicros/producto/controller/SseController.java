@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.fasterxml.jackson.databind.ObjectMapper; // ✅ NUEVO: Import para convertir a JSON
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -15,46 +17,44 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 public class SseController {
-    // Lista de todos los clientes conectados
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final AtomicInteger sequence = new AtomicInteger(0);
+    private final ObjectMapper objectMapper = new ObjectMapper(); // ✅ NUEVO: Instancia para usarla
 
     @GetMapping("/sse/stream")
     public SseEmitter stream() {
-        SseEmitter emitter = new SseEmitter(0L); // Sin timeout
+        SseEmitter emitter = new SseEmitter(0L);
         emitters.add(emitter);
 
-        // 1. Conexión establecida correctamente
         try {
             emitter.send(SseEmitter.event().name("connected").data("Conexión SSE establecida"));
         } catch (IOException e) {
             emitter.completeWithError(e);
         }
-
-        // 3. Reconexión automática y 8. Cerrar conexión desde servidor
+        
         emitter.onCompletion(() -> emitters.remove(emitter));
         emitter.onTimeout(() -> emitters.remove(emitter));
         emitter.onError((e) -> emitters.remove(emitter));
 
-        // 2. Recepción de mensajes, 4. Orden de mensajes, 5. Manejo de datos JSON
         executor.submit(() -> {
             try {
                 while (true) {
                     Thread.sleep(1000);
                     int seq = sequence.incrementAndGet();
-                    // 4. Orden de mensajes
                     emitter.send(SseEmitter.event().name("mensaje").data("Mensaje número: " + seq));
-                    // 5. Manejo de datos JSON
+                    
                     Map<String, Object> jsonPayload = Map.of("id", seq, "mensaje", "Mensaje JSON " + seq);
-                    emitter.send(SseEmitter.event().name("json").data(jsonPayload, MediaType.APPLICATION_JSON));
+                    
+                    // ✅ CORRECCIÓN: Convertimos el mapa a un String JSON antes de enviarlo.
+                    String jsonString = objectMapper.writeValueAsString(jsonPayload);
+                    emitter.send(SseEmitter.event().name("json").data(jsonString, MediaType.APPLICATION_JSON));
                 }
             } catch (Exception e) {
                 emitter.completeWithError(e);
             }
         });
 
-        // 7. Prueba de rendimiento (enviar 100 eventos rápidos)
         executor.submit(() -> {
             try {
                 Thread.sleep(7000);
@@ -69,7 +69,6 @@ public class SseController {
         return emitter;
     }
 
-    // 9. Manejo de múltiples conexiones: broadcast a todos los clientes
     @GetMapping("/sse/broadcast")
     public String broadcast() {
         for (SseEmitter emitter : emitters) {
@@ -82,7 +81,6 @@ public class SseController {
         return "Broadcast enviado a todos los clientes conectados.";
     }
 
-    // Endpoint para cerrar la conexión de todos los clientes manualmente
     @GetMapping("/sse/close")
     public String closeAll() {
         for (SseEmitter emitter : emitters) {
@@ -92,7 +90,6 @@ public class SseController {
         return "Conexiones SSE cerradas.";
     }
 
-    // Endpoint para forzar la desconexión SSE manualmente desde el frontend
     @GetMapping("/sse/error")
     public String forceError() {
         for (SseEmitter emitter : emitters) {
