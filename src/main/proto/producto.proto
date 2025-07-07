@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.grpc.producto";
+option java_outer_classname = "ProductoProto";
+
+service ProductoService {
+  rpc AgregarProducto (NuevoProductoRequest) returns (ProductoResponse);
+}
+
+message NuevoProductoRequest {
+  int32 idProducto = 1;
+  string nombre = 2;
+  double precio = 3;
+}
+
+message ProductoResponse {
+  string mensaje = 1;
+}

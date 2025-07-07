@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Compra Exitosa</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #e0f7fa, #e8f5e9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .success-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            width: 400px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .success-container h2 {
+            color: #2e7d32;
+            margin-bottom: 20px;
+        }
+
+        .success-container p {
+            color: #444;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .success-container .highlight {
+            font-weight: bold;
+            color: #1b5e20;
+        }
+
+        .redirect-msg {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <h2>¡Compra Realizada con Éxito!</h2>
+        <p><span class="highlight">Producto:</span> <span th:text="${producto}"></span></p>
+        <p><span class="highlight">Cantidad:</span> <span th:text="${cantidad}"></span></p>
+        <p><span class="highlight">Total pagado:</span> $<span th:text="${total}"></span></p>
+        <p><span class="highlight">Fecha:</span> <span th:text="${fecha}"></span></p>
+        <div class="redirect-msg">
+            Será redirigido al inicio en <span id="countdown">10</span> segundos...
+        </div>
+    </div>
+
+    <script>
+        let segundos = 10;
+        const contador = document.getElementById("countdown");
+        const intervalo = setInterval(() => {
+            segundos--;
+            contador.textContent = segundos;
+            if (segundos <= 0) {
+                clearInterval(intervalo);
+                window.location.href = "/";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
