@@ -5,89 +5,95 @@ import ProductoMicros.producto.service.ProductoSucursalService;
 import ProductoMicros.producto.service.TransbankService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Controller
 public class PagoController {
 
     @Autowired
     private TransbankService transbankService;
+
     @Autowired
     private ProductoSucursalService productoSucursalService;
 
-    @GetMapping("/pago")
+    // ✅ NUEVO: Endpoint para manejar el pago de un carrito completo.
+    @PostMapping("/iniciar-pago-carrito")
     @ResponseBody
-    public String inicio() {
-        return "<a href='/pagar'>Iniciar pago</a>";
-    }
-
-    @GetMapping("/pagar")
-    @ResponseBody
-    public Map<String, String> pagar(@RequestParam int idProductoSucursal, @RequestParam int cantidad) {
-        System.out.println(">>> Entrando al método /pagar con idProductoSucursal=" + idProductoSucursal + " y cantidad=" + cantidad);
-
-        double total = productoSucursalService.calcularTotal(idProductoSucursal, cantidad);
-        int montoFinal = (int) Math.round(total);  // ✅ CORRECCIÓN: conversión segura
-
-        System.out.println(">>> Monto final enviado a Transbank: " + montoFinal);
-
-        String returnUrl = "http://localhost:8087/retorno";
-
-        ProductoSucursal productoSucursal = productoSucursalService.getById(idProductoSucursal);
-        String nombreProducto = productoSucursal.getProducto().getNombre(); // Ajusta según tu modelo
-
-        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        String buyOrder = "orden_" + uuid;
-
-        Map<String, Object> respuesta = transbankService.iniciarTransaccion(
-            montoFinal,
-            buyOrder,
-            "session_" + UUID.randomUUID(),
-            returnUrl,
-            nombreProducto,
-            cantidad
-        );
-
-
-        Map<String, String> response = new HashMap<>();
-        if (respuesta.containsKey("token") && respuesta.containsKey("url")) {
-            String token = (String) respuesta.get("token");
-            String url = (String) respuesta.get("url");
-            System.out.println(">>> Redirigiendo a: " + url + "?token_ws=" + token);
-            response.put("token", token);
-            response.put("url", url);
-        } else {
-            System.out.println(">>> Error al iniciar transacción con Transbank");
-            response.put("error", "No se pudo iniciar la transacción");
+    public ResponseEntity<Map<String, String>> pagarCarrito(@RequestBody List<Map<String, Object>> cart) {
+        if (cart == null || cart.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El carrito está vacío."));
         }
 
-        return response;
+        double totalAmount = 0;
+        // Validación de stock y cálculo del total
+        for (Map<String, Object> item : cart) {
+            int id = (int) item.get("id");
+            int quantity = (int) item.get("quantity");
+            ProductoSucursal ps = productoSucursalService.getById(id);
+            if (ps.getStock() < quantity) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Stock insuficiente para el producto: " + ps.getProducto().getNombre()));
+            }
+            totalAmount += ps.getPrecio_unitario() * quantity;
+        }
+        
+        String buyOrder = "cart-orden_" + UUID.randomUUID().toString().substring(0, 8);
+        String sessionId = "cart-session_" + UUID.randomUUID().toString().substring(0, 8);
+        String returnUrl = "http://localhost:8087/retorno";
+
+        Map<String, Object> respuesta = transbankService.iniciarTransaccion((int) Math.round(totalAmount), buyOrder, sessionId, returnUrl, cart);
+
+        if (respuesta.containsKey("token") && respuesta.containsKey("url")) {
+            return ResponseEntity.ok(Map.of("token", (String) respuesta.get("token"), "url", (String) respuesta.get("url")));
+        } else {
+            return ResponseEntity.status(500).body(Map.of("error", "No se pudo iniciar la transacción con Transbank."));
+        }
     }
 
-@RequestMapping(value = "/retorno", method = {RequestMethod.GET, RequestMethod.POST})
-public String retorno(@RequestParam("token_ws") String token, Model model) {
-    Map<String, Object> resultado = transbankService.confirmarTransaccion(token);
+    // ✅ MODIFICADO: El método de retorno ahora procesa el carrito guardado.
+    @RequestMapping(value = "/retorno", method = {RequestMethod.GET, RequestMethod.POST})
+    public String retorno(@RequestParam(value = "token_ws", required = false) String token, Model model) {
+        if (token == null) {
+            return "compra_rechazada";
+        }
 
-    if ("AUTHORIZED".equalsIgnoreCase((String) resultado.get("status"))) {
-        model.addAttribute("producto", resultado.get("nombreProducto"));  // Asegúrate que esto esté seteado en TransbankService
-        model.addAttribute("cantidad", resultado.get("cantidad"));
-        model.addAttribute("total", resultado.get("monto"));
-        model.addAttribute("fecha", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")));
-        return "compra_exitosa";
-    } else {
-        return "compra_rechazada";
+        Map<String, Object> resultado = transbankService.confirmarTransaccion(token);
+
+        if ("AUTHORIZED".equalsIgnoreCase((String) resultado.get("status"))) {
+            List<Map<String, Object>> cart = (List<Map<String, Object>>) resultado.get("cart");
+            if (cart != null) {
+                for (Map<String, Object> item : cart) {
+                    try {
+                        int idProductoSucursal = (int) item.get("id");
+                        int cantidadComprada = (int) item.get("quantity");
+                        productoSucursalService.updateStock(idProductoSucursal, cantidadComprada);
+                        System.out.println("✅ Stock actualizado para ProductoSucursal ID " + idProductoSucursal);
+                    } catch (Exception e) {
+                        System.err.println("❌ Error al actualizar stock para el item " + item.get("id") + ": " + e.getMessage());
+                    }
+                }
+            }
+
+            // Prepara los datos para la vista de éxito
+            String productosComprados = cart.stream()
+                .map(item -> (String) item.get("name") + " (x" + item.get("quantity") + ")")
+                .collect(Collectors.joining(", "));
+
+            model.addAttribute("producto", productosComprados);
+            model.addAttribute("total", resultado.get("amount"));
+            model.addAttribute("fecha", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")));
+            return "compra_exitosa";
+        } else {
+            return "compra_rechazada";
+        }
     }
-}
-
-
-
 }

@@ -4,367 +4,347 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Venta</title>
+    <title>Venta de Productos</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
             padding: 20px;
+            color: #333;
+        }
+        .container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            gap: 20px;
+            max-width: 1400px;
+            margin: auto;
         }
-
-        .venta-container {
+        .productos-container, .carrito-container {
             background-color: white;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 900px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-
+        .productos-container {
+            flex: 3;
+        }
+        .carrito-container {
+            flex: 2;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+        }
         h2 {
             text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .search-container {
             margin-bottom: 20px;
         }
-
-        .search-container {
-            display: flex;
-            margin-bottom: 15px;
+        .search-container input {
             width: 100%;
-        }
-
-        .search-container input[type="text"] {
-            flex-grow: 1;
-            padding: 8px;
+            padding: 10px 15px;
             border: 1px solid #ccc;
-            border-radius: 5px 0 0 5px;
+            border-radius: 8px;
+            box-sizing: border-box;
         }
-
-        .search-container button {
-            background-color: #4faaf0;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 0 5px 5px 0;
-            cursor: pointer;
-        }
-
-        .search-container button:hover {
-            background-color: #3498db;
-        }
-
         table {
             width: 100%;
-            /* O un ancho fijo si lo prefieres, por ejemplo: width: 800px; */
             border-collapse: collapse;
             margin-bottom: 20px;
-            table-layout: fixed;
-            /* ¡Esta es la propiedad clave! */
         }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
+        th, td {
+            border-bottom: 1px solid #eee;
+            padding: 12px 10px;
             text-align: left;
-            /* Opcional: puedes agregar un ancho base para las columnas si lo deseas */
-            /* width: 150px; */
-            overflow: hidden;
-            /* Oculta el contenido que excede el ancho */
-            text-overflow: ellipsis;
-            /* Muestra "..." para indicar contenido oculto */
-            white-space: nowrap;
-            /* Evita que el texto se envuelva */
+            vertical-align: middle;
         }
-
         th {
-            background-color: #f2f2f2;
+            background-color: #f9f9f9;
+            font-weight: 600;
+            font-size: 14px;
         }
-
-        .selection-container {
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .action-cell {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            gap: 10px;
         }
-
-        .selection-container label {
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        .selection-container select {
+        .action-cell input {
+            width: 60px;
             padding: 8px;
             border: 1px solid #ccc;
-            border-radius: 5px;
-            flex-grow: 1;
-            margin-right: 10px;
+            border-radius: 6px;
+            text-align: center;
         }
-
-        .selection-container input[type="number"] {
-            width: 100px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-
-        .total {
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .buy-button {
-            background-color: #2ecc71;
+        .btn {
+            background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 8px 14px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
         }
-
-        .buy-button:hover {
-            background-color: #27ae60;
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        #cart-items li {
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        #cart-items ul {
+            padding: 0;
+            margin: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .cart-item-details {
+            flex-grow: 1;
+        }
+        .cart-item-name {
+            font-weight: 600;
+        }
+        .cart-item-info {
+            font-size: 13px;
+            color: #666;
+        }
+        .btn-remove {
+            background-color: #dc3545;
+        }
+        .btn-remove:hover {
+            background-color: #c82333;
+        }
+        .carrito-footer {
+            margin-top: 20px;
+            border-top: 2px solid #ddd;
+            padding-top: 15px;
+            text-align: right;
+        }
+        .total-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .btn-checkout {
+            background-color: #28a745;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+        }
+        .btn-checkout:hover {
+            background-color: #218838;
+        }
+        .btn-checkout:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .footer-link {
+            text-align: center;
+            margin-top: 30px;
         }
     </style>
 </head>
 
 <body>
-    <div class="venta-container">
-        <h2>Venta de Productos</h2>
-
-        <div class="search-container">
-            <input type="text" id="buscarProducto" placeholder="Buscar por nombre de producto"
-                oninput="filtrarTabla()" />
+    <div class="container">
+        <div class="productos-container">
+            <h2>Productos Disponibles</h2>
+            <div class="search-container">
+                <input type="text" id="buscarProducto" placeholder="Buscar por nombre de producto o sucursal..." oninput="filtrarTabla()" />
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Sucursal</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaProductos">
+                    </tbody>
+            </table>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Sucursal</th>
-                    <th>Producto</th>
-                    <th>Precio Unitario</th>
-                    <th>Stock</th>
-                </tr>
-            </thead>
-            <tbody id="tablaProductos">
-            </tbody>
-        </table>
-
-        <div class="selection-container">
-            <label for="productoSeleccionado">Producto Seleccionado:</label>
-            <select id="productoSeleccionado">
-                <option value="">Seleccione un producto de la tabla</option>
-            </select>
-            <label for="cantidadComprar">Cantidad a Comprar:</label>
-            <input type="number" id="cantidadComprar" min="1" value="1" />
-            <button onclick="calcularTotal()">Calcular Total</button>
+        <div class="carrito-container">
+            <h2>🛒 Carrito de Compras</h2>
+            <div id="cart-items">
+                <ul>
+                    </ul>
+                <p id="empty-cart-msg">Tu carrito está vacío.</p>
+            </div>
+            <div class="carrito-footer">
+                <div id="cart-total" class="total-text">Total: $0.00</div>
+                <button id="checkout-btn" class="btn btn-checkout" onclick="finalizarCompra()" disabled>Finalizar Compra</button>
+            </div>
         </div>
-
-        <div class="total" id="resultadoTotal">Total: -</div>
-
-        <button onclick="comprarDesdeFormulario()">Comprar</button>
-
-        <button id="btnSseConnect">Conectar SSE</button>
-        <button id="btnSseDisconnect">Desconectar SSE</button>
-        <button id="btnSseError">Forzar Error SSE</button>
-        <div id="sseStatus" style="margin:10px 0;font-weight:bold;"></div>
+    </div>
+    
+    <div class="footer-link">
+        <a href="/sse-monitor">Ir al Monitor de Eventos SSE</a>
     </div>
 
     <script>
-        let productosSucursalData = []; // Declare and initialize globally to store all product data
+        let productosDisponibles = [];
+        let carrito = [];
 
-        async function cargarProductosSucursal() {
+        // ✅ CORRECCIÓN: Se usa DOMContentLoaded para asegurar que todo el HTML
+        // esté cargado antes de ejecutar el script. Esto soluciona el error.
+        document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const response = await fetch("/api/v1/productoSucursal");
                 if (!response.ok) throw new Error("Error al obtener productos");
 
-                // Only parse JSON if the response is not empty (e.g., 204 No Content)
-                if (response.status !== 204) {
-                    productosSucursalData = await response.json(); // Assign data to the global variable
-                } else {
-                    productosSucursalData = []; // Ensure it's an empty array if no content
-                }
-
-                mostrarTablaProductos(productosSucursalData);
-                cargarOpcionesSelect(productosSucursalData);
+                productosDisponibles = response.status === 204 ? [] : await response.json();
+                renderizarTabla(productosDisponibles);
             } catch (error) {
                 console.error("Error cargando productos:", error);
                 alert("No se pudieron cargar los productos.");
             }
-        }
+        });
 
-        function mostrarTablaProductos(data) {
+        function renderizarTabla(productos) {
             const tablaBody = document.getElementById("tablaProductos");
             tablaBody.innerHTML = "";
-            data.forEach(ps => {
+            productos.forEach(ps => {
                 const row = tablaBody.insertRow();
-                row.insertCell().textContent = ps.idProductoSucursal;
-                row.insertCell().textContent = ps.sucursal.nombre;
-                row.insertCell().textContent = ps.producto.nombre;
-                row.insertCell().textContent = `$${ps.precio_unitario.toFixed(2)}`;
-                row.insertCell().textContent = ps.producto.stock;
-                row.addEventListener('click', () => seleccionarProducto(ps.idProductoSucursal));
-                row.style.cursor = 'pointer';
-            });
-        }
-
-        function cargarOpcionesSelect(data) {
-            const selectProducto = document.getElementById("productoSeleccionado");
-            selectProducto.innerHTML = '<option value="">Seleccione un producto de la tabla</option>'; // Clear existing options
-            data.forEach(ps => {
-                const option = document.createElement("option");
-                option.value = ps.idProductoSucursal;
-                option.textContent = `${ps.sucursal.nombre} - ${ps.producto.nombre} ($${ps.precio_unitario.toFixed(2)})`;
-                selectProducto.appendChild(option);
+                row.innerHTML = `
+                    <td>${ps.producto.nombre}</td>
+                    <td>${ps.sucursal.nombre}</td>
+                    <td>$${ps.precio_unitario.toFixed(2)}</td>
+                    <td>${ps.stock}</td>
+                    <td class="action-cell">
+                        <input type="number" id="qty-${ps.idProductoSucursal}" value="1" min="1" max="${ps.stock}">
+                        <button class="btn" onclick="agregarAlCarrito(${ps.idProductoSucursal})">Añadir</button>
+                    </td>
+                `;
             });
         }
 
         function filtrarTabla() {
             const filtro = document.getElementById("buscarProducto").value.toLowerCase();
-            const resultados = productosSucursalData.filter(ps =>
+            const resultados = productosDisponibles.filter(ps =>
                 ps.producto.nombre.toLowerCase().includes(filtro) ||
                 ps.sucursal.nombre.toLowerCase().includes(filtro)
             );
-            mostrarTablaProductos(resultados);
-            cargarOpcionesSelectFiltrados(resultados);
+            renderizarTabla(resultados);
         }
 
-        function cargarOpcionesSelectFiltrados(data) {
-            const selectProducto = document.getElementById("productoSeleccionado");
-            const currentValue = selectProducto.value;
-            selectProducto.innerHTML = '<option value="">Seleccione un producto de la tabla</option>';
-            data.forEach(ps => {
-                const option = document.createElement("option");
-                option.value = ps.idProductoSucursal;
-                option.textContent = `${ps.sucursal.nombre} - ${ps.producto.nombre} ($${ps.precio_unitario.toFixed(2)})`;
-                selectProducto.appendChild(option);
-            });
-            if (data.some(ps => ps.idProductoSucursal == currentValue)) {
-                selectProducto.value = currentValue;
+        function agregarAlCarrito(idProductoSucursal) {
+            const producto = productosDisponibles.find(p => p.idProductoSucursal === idProductoSucursal);
+            const cantidadInput = document.getElementById(`qty-${idProductoSucursal}`);
+            const cantidad = parseInt(cantidadInput.value, 10);
+
+            if (isNaN(cantidad) || cantidad <= 0) {
+                alert("Por favor, ingrese una cantidad válida.");
+                return;
+            }
+            if (cantidad > producto.stock) {
+                alert(`Stock insuficiente. Solo quedan ${producto.stock} unidades.`);
+                return;
+            }
+
+            const itemExistente = carrito.find(item => item.id === idProductoSucursal);
+
+            if (itemExistente) {
+                const nuevaCantidad = itemExistente.quantity + cantidad;
+                if (nuevaCantidad > producto.stock) {
+                    alert(`No puedes añadir más. Con ${nuevaCantidad} unidades superas el stock de ${producto.stock}.`);
+                    return;
+                }
+                itemExistente.quantity = nuevaCantidad;
             } else {
-                selectProducto.value = ""; // Reset if current selection is no longer in filtered list
-            }
-        }
-
-        let productoSeleccionadoId = null;
-
-        function seleccionarProducto(id) {
-            productoSeleccionadoId = id;
-            document.getElementById("productoSeleccionado").value = id;
-            calcularTotal(); // Optional: Recalculate total when a new product is selected
-        }
-
-        async function calcularTotal() {
-            const cantidad = document.getElementById("cantidadComprar").value;
-            if (!productoSeleccionadoId) {
-                document.getElementById("resultadoTotal").textContent = "Total: -";
-                return;
-            }
-            if (isNaN(cantidad) || parseInt(cantidad) <= 0) {
-                document.getElementById("resultadoTotal").textContent = "Total: Cantidad inválida";
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/v1/productoSucursal/calcular-total?idProductoSucursal=${productoSeleccionadoId}&cantidad=${cantidad}`);
-                if (!response.ok) throw new Error("Error al calcular el total");
-                const total = await response.json();
-
-                const usdResponse = await fetch(`/api/v1/productoSucursal/convertir-usd?monto=${total}`);
-                if (!usdResponse.ok) throw new Error("Error al convertir a USD");
-                const totalUSD = await usdResponse.text();
-
-                document.getElementById("resultadoTotal").textContent = `Total: $${total.toFixed(2)} | Total USD: $${totalUSD}`;
-            } catch (error) {
-                console.error("Error al calcular el total:", error);
-                document.getElementById("resultadoTotal").textContent = "Total: Error";
-                alert("Ocurrió un error al calcular el total.");
-            }
-        }
-
-        async function comprarProducto(idProductoSucursal, cantidad) {
-            try {
-                const params = new URLSearchParams({
-                    idProductoSucursal: idProductoSucursal,
-                    cantidad: cantidad
+                carrito.push({
+                    id: producto.idProductoSucursal,
+                    name: `${producto.producto.nombre} (${producto.sucursal.nombre})`,
+                    quantity: cantidad,
+                    price: producto.precio_unitario,
+                    stock: producto.stock
                 });
+            }
+            
+            cantidadInput.value = 1; // Resetear input
+            renderizarCarrito();
+        }
+        
+        function renderizarCarrito() {
+            const cartItemsContainer = document.querySelector("#cart-items ul");
+            const emptyMsg = document.getElementById("empty-cart-msg");
+            const totalDiv = document.getElementById("cart-total");
+            const checkoutBtn = document.getElementById("checkout-btn");
+            cartItemsContainer.innerHTML = "";
 
-                const response = await fetch(`/pagar?${params.toString()}`);
+            if (carrito.length === 0) {
+                emptyMsg.style.display = "block";
+                checkoutBtn.disabled = true;
+            } else {
+                emptyMsg.style.display = "none";
+                checkoutBtn.disabled = false;
+            }
+
+            let totalGeneral = 0;
+
+            carrito.forEach((item, index) => {
+                const li = document.createElement("li");
+                const itemTotal = item.quantity * item.price;
+                totalGeneral += itemTotal;
+
+                li.innerHTML = `
+                    <div class="cart-item-details">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-info">
+                            ${item.quantity} x $${item.price.toFixed(2)} = <b>$${itemTotal.toFixed(2)}</b>
+                        </div>
+                    </div>
+                    <button class="btn btn-remove" onclick="removerDelCarrito(${index})">X</button>
+                `;
+                cartItemsContainer.appendChild(li);
+            });
+            
+            totalDiv.textContent = `Total: $${totalGeneral.toFixed(2)}`;
+        }
+
+        function removerDelCarrito(index) {
+            carrito.splice(index, 1);
+            renderizarCarrito();
+        }
+
+        async function finalizarCompra() {
+            if (carrito.length === 0) {
+                alert("Tu carrito está vacío.");
+                return;
+            }
+
+            try {
+                const response = await fetch('/iniciar-pago-carrito', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(carrito)
+                });
+                
                 const data = await response.json();
 
-                if (data.url && data.token) {
+                if (response.ok && data.url) {
                     window.location.href = `${data.url}?token_ws=${data.token}`;
                 } else {
-                    alert("Error al iniciar la transacción con Transbank.");
-                    console.error("Respuesta:", data);
+                    alert("Error: " + (data.error || "No se pudo iniciar el pago."));
                 }
             } catch (error) {
-                console.error("Error en la compra:", error);
-                alert("Hubo un error al procesar la compra.");
+                console.error("Error al finalizar la compra:", error);
+                alert("Hubo un problema de conexión al intentar finalizar la compra.");
             }
         }
-
-        function comprarDesdeFormulario() {
-            const select = document.getElementById("productoSeleccionado");
-            const cantidadInput = document.getElementById("cantidadComprar");
-
-            const idProductoSucursal = select.value;
-            const cantidad = cantidadInput.value;
-
-            if (!idProductoSucursal || cantidad <= 0) {
-                alert("Seleccione un producto y una cantidad válida.");
-                return;
-            }
-
-            comprarProducto(idProductoSucursal, cantidad);
-        }
-
-        // Initial load of products when the page loads
-        window.onload = cargarProductosSucursal;
-    </script>
-
-    <script>
-        let evtSource = null;
-        const statusDiv = document.getElementById("sseStatus");
-        document.getElementById("btnSseConnect").onclick = function() {
-            if (evtSource) {
-                statusDiv.textContent = "Ya está conectado.";
-                return;
-            }
-            evtSource = new EventSource("http://localhost:8087/sse/stream");
-            statusDiv.textContent = "Conectado a SSE.";
-            evtSource.addEventListener("connected", e => console.log("Conexión:", e.data));
-            evtSource.addEventListener("mensaje", e => console.log("Mensaje:", e.data));
-            evtSource.addEventListener("json", e => console.log("JSON:", e.data));
-            evtSource.addEventListener("error", e => console.log("Error:", e.data));
-            evtSource.addEventListener("performance", e => console.log("Performance:", e.data));
-            evtSource.addEventListener("broadcast", e => console.log("Broadcast:", e.data));
-            evtSource.onerror = (e) => {
-                statusDiv.textContent = "Desconectado (error SSE)";
-                console.log("onerror:", e);
-                evtSource.close();
-                evtSource = null;
-            };
-        };
-        document.getElementById("btnSseDisconnect").onclick = function() {
-            if (evtSource) {
-                evtSource.close();
-                evtSource = null;
-                statusDiv.textContent = "Desconectado manualmente.";
-            } else {
-                statusDiv.textContent = "No está conectado.";
-            }
-        };
-        document.getElementById("btnSseError").onclick = function() {
-            fetch("/sse/error").then(() => {
-                statusDiv.textContent = "Error SSE forzado desde el backend.";
-            });
-        };
     </script>
 </body>
-
 </html>

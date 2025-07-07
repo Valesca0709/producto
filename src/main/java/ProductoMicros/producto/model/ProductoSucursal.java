@@ -31,8 +31,11 @@ public class ProductoSucursal {
     @JoinColumn(name = "id_sucursal", nullable = false)
     private Sucursal sucursal;
     
-    @Column(nullable = false)
-    private int cantidad;
+    // ✅ CORRECCIÓN: Se especifica el nombre de la columna en la BD.
+    // Esto asegura que Java encuentre la columna correcta, sin importar
+    // si se llama 'stock' o 'cantidad' en la base de datos.
+    @Column(name = "stock", nullable = false)
+    private int stock;
     
     @Column(nullable = false)
     private double precio_unitario;

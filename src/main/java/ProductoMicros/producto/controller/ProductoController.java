@@ -4,11 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import ProductoMicros.producto.model.Producto;
 import ProductoMicros.producto.service.ProductoService;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -16,8 +18,7 @@ import java.util.List;
 public class ProductoController {
     @Autowired
     private ProductoService productoService;
-    
-    // Listar todos los productos
+
     @GetMapping
     public ResponseEntity<List<Producto>> getAllProductos() {
         List<Producto> productos = productoService.findAll();
@@ -26,27 +27,25 @@ public class ProductoController {
         }
         return new ResponseEntity<>(productos, HttpStatus.OK);
     }
-    
-    // Obtener un producto por ID
+
     @GetMapping("/{id}")
     public ResponseEntity<Producto> getProductoById(@PathVariable int id) {
         return productoService.findById(id)
                 .map(producto -> new ResponseEntity<>(producto, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
-    
-    // Crear un nuevo producto
+
     @PostMapping
     public ResponseEntity<Producto> createProducto(@RequestBody Producto producto) {
         try {
             Producto nuevoProducto = productoService.save(producto);
             return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
         } catch (Exception e) {
-            e.printStackTrace(); 
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    // Actualizar un producto
+
     @PutMapping("/{id}")
     public ResponseEntity<Producto> updateProducto(@PathVariable int id, @RequestBody Producto producto) {
         if (!productoService.findById(id).isPresent()) {
@@ -56,18 +55,15 @@ public class ProductoController {
         Producto productoActualizado = productoService.save(producto);
         return new ResponseEntity<>(productoActualizado, HttpStatus.OK);
     }
-    
-    // Actualizar solo el stock de un producto
+
     @PatchMapping("/{id}/stock")
     public ResponseEntity<Producto> updateStock(@PathVariable int id, @RequestParam int nuevoStock) {
-        Producto productoActualizado = productoService.updateStock(id, nuevoStock);
-        if (productoActualizado == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(productoActualizado, HttpStatus.OK);
+        // Este método ahora no tendrá efecto sobre el stock de ProductoSucursal.
+        // Se mantiene por si se necesita para otros propósitos, pero no afecta el carrito.
+        // Si no se usa, también podría eliminarse para mayor limpieza.
+        return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
     }
-    
-    // Eliminar un producto
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProducto(@PathVariable int id) {
         if (!productoService.findById(id).isPresent()) {
@@ -76,4 +72,8 @@ public class ProductoController {
         productoService.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    // ✅ CORRECCIÓN: Se elimina el método procesarCompra, ya que causaba los errores
+    // y su lógica fue reemplazada por el flujo de pago en PagoController.
+
 }
