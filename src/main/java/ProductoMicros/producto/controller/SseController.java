@@ -50,6 +50,15 @@ public class SseController {
             for (SseEmitter emitter : sseNotificationService.getEmitters()) {
                 try {
                     emitter.send(SseEmitter.event().name("system").data("✅ Verificación completada: Todos los productos tienen stock suficiente (≥10 unidades)"));
+                    
+                    // Enviar evento a la vista principal también
+                    Map<String, Object> alertaVistaPrincipal = new HashMap<>();
+                    alertaVistaPrincipal.put("producto", "Todos los productos");
+                    alertaVistaPrincipal.put("sucursal", "tienen stock suficiente");
+                    alertaVistaPrincipal.put("stock", "✅");
+                    
+                    String jsonVistaPrincipal = objectMapper.writeValueAsString(alertaVistaPrincipal);
+                    emitter.send(SseEmitter.event().name("verificacion-manual").data(jsonVistaPrincipal, MediaType.APPLICATION_JSON));
                 } catch (IOException e) {
                     emitter.completeWithError(e);
                 }
@@ -60,6 +69,7 @@ public class SseController {
         for (SseEmitter emitter : sseNotificationService.getEmitters()) {
             try {
                 for (ProductoSucursal ps : productosStockBajo) {
+                    // Evento para el monitor SSE (como estaba antes)
                     Map<String, Object> alerta = new HashMap<>();
                     alerta.put("tipo", "STOCK_BAJO_MANUAL");
                     alerta.put("producto", ps.getProducto().getNombre());
@@ -69,6 +79,15 @@ public class SseController {
                     
                     String jsonString = objectMapper.writeValueAsString(alerta);
                     emitter.send(SseEmitter.event().name("stock-bajo-manual").data(jsonString, MediaType.APPLICATION_JSON));
+                    
+                    //  Evento para la vista principal (notificaciones toast)
+                    Map<String, Object> alertaVistaPrincipal = new HashMap<>();
+                    alertaVistaPrincipal.put("producto", ps.getProducto().getNombre());
+                    alertaVistaPrincipal.put("sucursal", ps.getSucursal().getNombre());
+                    alertaVistaPrincipal.put("stock", ps.getStock());
+                    
+                    String jsonVistaPrincipal = objectMapper.writeValueAsString(alertaVistaPrincipal);
+                    emitter.send(SseEmitter.event().name("verificacion-manual").data(jsonVistaPrincipal, MediaType.APPLICATION_JSON));
                 }
             } catch (IOException e) {
                 emitter.completeWithError(e);

@@ -286,6 +286,19 @@
         .toast.success {
             background: linear-gradient(135deg, #00b894, #00cec9);
         }
+        
+        .toast.info {
+            background: linear-gradient(135deg, #0984e3, #74b9ff);
+        }
+        
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -463,7 +476,7 @@
             ocultarTotalUSD();
         }
 
-        // ✅ NUEVO: Función para mostrar el total en USD
+        //  Función para mostrar el total en USD
         async function mostrarTotalUSD() {
             const totalCLP = calcularTotalCarrito();
             
@@ -507,7 +520,7 @@
             }
         }
 
-        // ✅ NUEVO: Función para ocultar el total en USD
+        //  Función para ocultar el total en USD
         function ocultarTotalUSD() {
             const usdBtn = document.getElementById("usd-btn");
             const usdDisplay = document.getElementById("usd-display");
@@ -517,7 +530,7 @@
             usdBtn.onclick = mostrarTotalUSD;
         }
 
-        // ✅ NUEVO: Función auxiliar para calcular el total del carrito
+        // Función auxiliar para calcular el total del carrito
         function calcularTotalCarrito() {
             return carrito.reduce((total, item) => total + (item.quantity * item.price), 0);
         }
@@ -561,6 +574,9 @@
             if (type === 'success') {
                 icon = '✅';
                 title = 'Compra Exitosa';
+            } else if (type === 'info') {
+                icon = '📊';
+                title = 'Verificación de Stock';
             }
             
             toast.innerHTML = `
@@ -614,9 +630,38 @@
                 }, 3000);
             });
             
+            //  Escuchar verificaciones manuales desde el monitor SSE
+            evtSource.addEventListener("verificacion-manual", e => {
+                const alertData = JSON.parse(e.data);
+                
+                // Determinar el tipo de notificación
+                let tipo = 'info';
+                if (alertData.stock !== '✅' && alertData.stock < 10) {
+                    tipo = 'warning';
+                }
+                
+                // Agregar un pequeño retraso para que se vean las notificaciones escalonadas
+                setTimeout(() => {
+                    showToast(alertData, tipo);
+                }, Math.random() * 1000); // Retraso aleatorio de 0-1 segundo
+                
+                console.log("Verificación manual desde monitor SSE:", alertData);
+            });
+            
             // Eventos del sistema (conexión, etc.)
             evtSource.addEventListener("system", e => {
                 console.log("Sistema SSE:", e.data);
+            });
+            
+            // Evento para notificaciones de compra exitosa
+            evtSource.addEventListener("compra-exitosa", e => {
+                const alertData = JSON.parse(e.data);
+                showToast({
+                    producto: "Compra realizada",
+                    sucursal: "exitosamente",
+                    stock: "✅"
+                }, 'success');
+                console.log("Compra exitosa:", alertData);
             });
             
             evtSource.onerror = (e) => {
