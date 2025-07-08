@@ -135,6 +135,34 @@
             font-weight: bold;
             margin-bottom: 15px;
         }
+        .usd-container {
+            margin-bottom: 15px;
+        }
+        .btn-usd {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            margin-bottom: 10px;
+        }
+        .btn-usd:hover {
+            background-color: #138496;
+        }
+        .usd-display {
+            font-size: 16px;
+            color: #17a2b8;
+            font-weight: 600;
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #17a2b8;
+            display: none;
+        }
         .btn-checkout {
             background-color: #28a745;
             width: 100%;
@@ -151,6 +179,112 @@
         .footer-link {
             text-align: center;
             margin-top: 30px;
+        }
+        
+        /* Estilos para notificaciones toast en la tienda */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 350px;
+        }
+        
+        .toast {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .toast::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ffeaa7, #fdcb6e);
+            animation: toast-progress 10s linear;
+        }
+        
+        @keyframes toast-progress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast.hide {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        
+        .toast-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            font-size: 20px;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin: 0;
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            margin-left: auto;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .toast-close:hover {
+            opacity: 1;
+        }
+        
+        .toast-body {
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
+        }
+        
+        .toast-details {
+            margin-top: 8px;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .toast.warning {
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+        }
+        
+        .toast.success {
+            background: linear-gradient(135deg, #00b894, #00cec9);
         }
     </style>
 </head>
@@ -186,6 +320,10 @@
             </div>
             <div class="carrito-footer">
                 <div id="cart-total" class="total-text">Total: $0.00</div>
+                <div class="usd-container">
+                    <button id="usd-btn" class="btn-usd" onclick="mostrarTotalUSD()">💵 Ver total en USD</button>
+                    <div id="usd-display" class="usd-display"></div>
+                </div>
                 <button id="checkout-btn" class="btn btn-checkout" onclick="finalizarCompra()" disabled>Finalizar Compra</button>
             </div>
         </div>
@@ -194,12 +332,15 @@
     <div class="footer-link">
         <a href="/sse-monitor">Ir al Monitor de Eventos SSE</a>
     </div>
+    
+    <!-- Contenedor para notificaciones toast -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <script>
         let productosDisponibles = [];
         let carrito = [];
 
-        // ✅ CORRECCIÓN: Se usa DOMContentLoaded para asegurar que todo el HTML
+        //  Se usa DOMContentLoaded para asegurar que todo el HTML
         // esté cargado antes de ejecutar el script. Esto soluciona el error.
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -318,6 +459,67 @@
         function removerDelCarrito(index) {
             carrito.splice(index, 1);
             renderizarCarrito();
+            // Ocultar USD al cambiar el carrito
+            ocultarTotalUSD();
+        }
+
+        // ✅ NUEVO: Función para mostrar el total en USD
+        async function mostrarTotalUSD() {
+            const totalCLP = calcularTotalCarrito();
+            
+            if (totalCLP === 0) {
+                alert("Tu carrito está vacío.");
+                return;
+            }
+
+            const usdBtn = document.getElementById("usd-btn");
+            const usdDisplay = document.getElementById("usd-display");
+            
+            // Mostrar loading
+            usdBtn.textContent = "💵 Convirtiendo...";
+            usdBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/v1/productoSucursal/convertir-usd?monto=${totalCLP}`);
+                
+                if (!response.ok) {
+                    throw new Error("Error al obtener la tasa de cambio");
+                }
+                
+                const totalUSD = await response.text();
+                
+                // Mostrar el resultado
+                usdDisplay.innerHTML = `
+                    <strong>Total en USD: $${totalUSD}</strong><br>
+                    <small>💰 Tasa de cambio actual del Banco Central</small>
+                `;
+                usdDisplay.style.display = "block";
+                
+                // Cambiar el botón para ocultar
+                usdBtn.textContent = "❌ Ocultar USD";
+                usdBtn.onclick = ocultarTotalUSD;
+                
+            } catch (error) {
+                console.error("Error al convertir a USD:", error);
+                alert("No se pudo obtener la tasa de cambio. Intenta de nuevo.");
+            } finally {
+                usdBtn.disabled = false;
+            }
+        }
+
+        // ✅ NUEVO: Función para ocultar el total en USD
+        function ocultarTotalUSD() {
+            const usdBtn = document.getElementById("usd-btn");
+            const usdDisplay = document.getElementById("usd-display");
+            
+            usdDisplay.style.display = "none";
+            usdBtn.textContent = "💵 Ver total en USD";
+            usdBtn.onclick = mostrarTotalUSD;
+        }
+
+        // ✅ NUEVO: Función auxiliar para calcular el total del carrito
+        function calcularTotalCarrito() {
+            return carrito.reduce((total, item) => total + (item.quantity * item.price), 0);
         }
 
         async function finalizarCompra() {
@@ -345,6 +547,89 @@
                 alert("Hubo un problema de conexión al intentar finalizar la compra.");
             }
         }
+        
+        //  Funciones para notificaciones toast en la tienda
+        const toastContainer = document.getElementById("toastContainer");
+        
+        function showToast(alertData, type = 'warning') {
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            
+            let icon = '⚠️';
+            let title = 'Stock Bajo';
+            
+            if (type === 'success') {
+                icon = '✅';
+                title = 'Compra Exitosa';
+            }
+            
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <span class="toast-icon">${icon}</span>
+                    <h4 class="toast-title">${title}</h4>
+                    <button class="toast-close" onclick="hideToast(this.parentElement.parentElement)">×</button>
+                </div>
+                <div class="toast-body">
+                    <strong>${alertData.producto}</strong> en <strong>${alertData.sucursal}</strong>
+                    <div class="toast-details">
+                        Stock restante: <strong>${alertData.stock} unidades</strong><br>
+                        <small>🛒 ¡Aprovecha antes de que se agote!</small>
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                hideToast(toast);
+            }, 10000);
+        }
+        
+        function hideToast(toast) {
+            toast.classList.add('hide');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.parentElement.removeChild(toast);
+                }
+            }, 400);
+        }
+        
+        //  Conexión SSE solo para notificaciones de cambios reales
+        function conectarSSE() {
+            const evtSource = new EventSource("http://localhost:8087/sse/stream");
+            
+            // Solo escuchar eventos de cambios reales de stock después de compras
+            evtSource.addEventListener("stock-bajo-compra", e => {
+                const alertData = JSON.parse(e.data);
+                showToast(alertData, 'warning');
+                console.log("Stock actualizado después de compra:", alertData);
+                
+                // Actualizar la tabla de productos para reflejar el nuevo stock
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+            });
+            
+            // Eventos del sistema (conexión, etc.)
+            evtSource.addEventListener("system", e => {
+                console.log("Sistema SSE:", e.data);
+            });
+            
+            evtSource.onerror = (e) => {
+                console.warn("Conexión SSE perdida, reintentando en 10 segundos...");
+                evtSource.close();
+                setTimeout(conectarSSE, 10000);
+            };
+        }
+        
+        // Conectar automáticamente al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(conectarSSE, 1000); // Esperar un segundo antes de conectar
+        });
     </script>
 </body>
 </html>

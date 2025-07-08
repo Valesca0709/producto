@@ -21,12 +21,16 @@ import ProductoMicros.producto.repository.ProductoSucursalRepository;
 public class ProductoSucursalService {
     @Autowired
     private ProductoSucursalRepository productoSucursalRepository;
+    
+    //  Referencia circular lazy para evitar problemas de dependencia
+    @Autowired
+    private SseNotificationService sseNotificationService;
 
     public List<ProductoSucursal> findAll() {
         // Se llama al método del repositorio para obtener los datos.
         List<ProductoSucursal> productos = productoSucursalRepository.findAllWithStock();
 
-        // ✅ --- INICIO DE CÓDIGO PARA DEPURACIÓN ---
+        // --- INICIO DE CÓDIGO PARA DEPURACIÓN ---
         System.out.println("==========================================================");
         System.out.println("DEPURANDO: Verificando datos de la base de datos...");
         
@@ -45,12 +49,11 @@ public class ProductoSucursalService {
             }
         }
         System.out.println("==========================================================");
-        // ✅ --- FIN DE CÓDIGO PARA DEPURACIÓN ---
+        // --- FIN DE CÓDIGO PARA DEPURACIÓN ---
 
         return productos;
     }   
 
-    // ... (El resto del archivo no cambia)
 
     public List<ProductoSucursal> findByNombreAndId(String nombre, int idProducto) {
         return productoSucursalRepository.findByProductoNombreAndProductoIdProducto(nombre, idProducto);
@@ -80,7 +83,20 @@ public class ProductoSucursalService {
         }
         int nuevoStock = productoSucursal.getStock() - cantidadComprada;
         productoSucursal.setStock(nuevoStock);
-        return productoSucursalRepository.save(productoSucursal);
+        
+        ProductoSucursal productoActualizado = productoSucursalRepository.save(productoSucursal);
+        
+        // Notificar a través de SSE si el stock es bajo
+        if (nuevoStock < 10) {
+            sseNotificationService.notificarStockBajo(productoActualizado);
+        }
+        
+        return productoActualizado;
+    }
+    
+    //  Método para obtener productos con stock bajo
+    public List<ProductoSucursal> obtenerProductosConStockBajo() {
+        return productoSucursalRepository.findProductosConStockBajo();
     }
 
     public double obtenerTasaUSD() throws IOException {

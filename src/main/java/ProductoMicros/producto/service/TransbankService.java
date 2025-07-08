@@ -23,10 +23,10 @@ public class TransbankService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     
-    // ✅ CAMBIO: Ahora guarda un Object, que será nuestro carrito (una Lista).
+    // Ahora guarda un Object, que será nuestro carrito (una Lista).
     private final Map<String, Object> transaccionesTemporales = new HashMap<>();
 
-    // ✅ CAMBIO: La firma ahora acepta el monto total y el carrito.
+    // La firma ahora acepta el monto total y el carrito.
     public Map<String, Object> iniciarTransaccion(int totalAmount, String buyOrder, String sessionId, String returnUrl, List<Map<String, Object>> cart) {
         String url = apiUrl + "/transactions";
         Map<String, Object> body = new HashMap<>();
@@ -48,7 +48,7 @@ public class TransbankService {
 
             if (respuesta != null && respuesta.get("token") != null) {
                 String token = (String) respuesta.get("token");
-                // ✅ NUEVO: Guardamos el carrito completo asociado al token.
+                // Guardamos el carrito completo asociado al token.
                 transaccionesTemporales.put(token, cart);
             }
 
@@ -74,7 +74,7 @@ public class TransbankService {
             Map<String, Object> resultado = response.getBody();
 
             if (resultado != null && transaccionesTemporales.containsKey(token)) {
-                // ✅ NUEVO: Adjuntamos el carrito guardado a la respuesta de confirmación.
+                //  Adjuntamos el carrito guardado a la respuesta de confirmación.
                 resultado.put("cart", transaccionesTemporales.get(token));
                 transaccionesTemporales.remove(token);
             }

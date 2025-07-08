@@ -31,6 +31,6 @@ public class ProductoService {
         productoRepository.deleteById(id);
     }
     
-    // ✅ CORRECCIÓN: Se elimina el método updateStock que hacía referencia
+    // Se elimina el método updateStock que hacía referencia
     // a un campo que ya no existe en la entidad Producto.
 }

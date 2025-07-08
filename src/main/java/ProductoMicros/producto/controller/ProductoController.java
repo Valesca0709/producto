@@ -73,7 +73,4 @@ public class ProductoController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // ✅ CORRECCIÓN: Se elimina el método procesarCompra, ya que causaba los errores
-    // y su lógica fue reemplazada por el flujo de pago en PagoController.
-
 }

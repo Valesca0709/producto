@@ -5,7 +5,7 @@
 INSERT INTO sucursal (id_sucursal, nombre, direccion, telefono, ciudad, region) VALUES
 (1, 'Santiago Centro', 'Avenida Libertador #123', '+56911111111', 'Santiago', 'Metropolitana'),
 (2, 'Providencia', 'Avenida Providencia #456', '+56922222222', 'Santiago', 'Metropolitana'),
-(3, 'Concepción Centro', 'Calle O Higgins #789', '+56933333333', 'Concepción', 'Biobío');
+(3, 'Concepcion Centro', 'Calle O Higgins #789', '+56933333333', 'Concepcion', 'Biobio');
 
 -- =================================================================
 -- INSERTS PARA LA TABLA PRODUCTO
@@ -13,8 +13,8 @@ INSERT INTO sucursal (id_sucursal, nombre, direccion, telefono, ciudad, region) 
 -- Se crean 4 productos de ejemplo. Recuerda que el stock ya no está aquí.
 INSERT INTO producto (id_producto, nombre, precio) VALUES
 (101, 'Laptop Gamer Pro', 1250000),
-(102, 'Mouse Inalámbrico RGB', 35000),
-(103, 'Teclado Mecánico', 80000),
+(102, 'Mouse Inalambrico RGB', 35000),
+(103, 'Teclado Mecanico', 80000),
 (104, 'Monitor Curvo 27"', 250000);
 
 -- =================================================================
@@ -31,14 +31,14 @@ INSERT INTO producto_sucursal (id_producto, id_sucursal, stock, precio_unitario)
 
 -- Productos para Providencia (id_sucursal = 2)
 INSERT INTO producto_sucursal (id_producto, id_sucursal, stock, precio_unitario) VALUES
-(101, 2, 5, 1280000),  -- Hay 5 Laptops en Providencia (a otro precio)
+(101, 2, 3, 1280000),  -- Hay 3 Laptops en Providencia (STOCK BAJO)
 (104, 2, 20, 249990); -- Hay 20 Monitores en Providencia
 
 -- Productos para Concepción Centro (id_sucursal = 3)
 INSERT INTO producto_sucursal (id_producto, id_sucursal, stock, precio_unitario) VALUES
-(102, 3, 40, 35500),   -- Hay 40 Mouses en Concepción
+(102, 3, 8, 35500),   -- Hay 8 Mouses en Concepción (STOCK BAJO)
 (103, 3, 25, 81000),   -- Hay 25 Teclados en Concepción
-(104, 3, 10, 255000);  -- Hay 10 Monitores en Concepción
+(104, 3, 7, 255000);  -- Hay 7 Monitores en Concepción (STOCK BAJO)
 
 -- Este producto no tendrá stock en ninguna sucursal para probar el filtro
 -- INSERT INTO producto_sucursal (id_producto, id_sucursal, stock, precio_unitario) VALUES (101, 3, 0, 1300000);

@@ -11,7 +11,7 @@ public class HomeController {
         return "index"; // Muestra la página de ventas principal
     }
 
-    // ✅ NUEVO: Este método servirá la nueva página de monitoreo SSE.
+    //  Este método servirá la nueva página de monitoreo SSE.
     @GetMapping("/sse-monitor")
     public String sseMonitor() {
         return "sse_monitor"; // Apunta al nuevo archivo sse_monitor.html

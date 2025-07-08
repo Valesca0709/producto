@@ -26,7 +26,7 @@ public class PagoController {
     @Autowired
     private ProductoSucursalService productoSucursalService;
 
-    // ✅ NUEVO: Endpoint para manejar el pago de un carrito completo.
+    // Endpoint para manejar el pago de un carrito completo.
     @PostMapping("/iniciar-pago-carrito")
     @ResponseBody
     public ResponseEntity<Map<String, String>> pagarCarrito(@RequestBody List<Map<String, Object>> cart) {
@@ -59,7 +59,7 @@ public class PagoController {
         }
     }
 
-    // ✅ MODIFICADO: El método de retorno ahora procesa el carrito guardado.
+    // El método de retorno ahora procesa el carrito guardado.
     @RequestMapping(value = "/retorno", method = {RequestMethod.GET, RequestMethod.POST})
     public String retorno(@RequestParam(value = "token_ws", required = false) String token, Model model) {
         if (token == null) {
